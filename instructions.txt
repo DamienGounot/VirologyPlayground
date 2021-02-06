@@ -1,0 +1,15 @@
+pour la suite
+cp ... src ... dest
+scp ... src = arg[0] ... user@<ip>:/home/user
+
+
+michel@archoad.io ---> pour le 19 février 2021 à 23h42
+envoyer un fichier vaccin_nom_prenom.c 
+
+une fonction scan network --> scanNetwork() return list @ip:22 
+
+colonize(list, argv[0]) --> réalise un scp
+
+a compiler avec //compilation: gcc -O3 -Wall -W -Wstrict-prototypes -Werror vaccin_nom_prenom.c
+
+si possible executer le point exe dst avec ssh -option a voir 
