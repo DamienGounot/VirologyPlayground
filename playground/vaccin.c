@@ -11,8 +11,8 @@
 #define SOURCE_HOST_IP "192.168.5.0"
 #define MASK "255.255.255.0"
 #define SSH "/usr/bin/ssh -qq"
-#define SCP "/usr/bin/scp -q"
-#define DEST_FILE "/root/vaccin"
+#define SCP "/usr/bin/scp -q -p"
+#define DEST_FILE "/home/dstevens/vaccin"
 #define port 22
 
 #define beginScanRange 6
@@ -119,15 +119,17 @@ int * scanNetwork(void)
 void colonize(int *list, char src[])
 {
     char cmd[256];
+    char tmp[64];
 
     for(int i = 0; i < nbHost ; i++)
     {   
         char* actualIP = createIP(SOURCE_HOST_IP,list[i]);
-
-        sprintf(cmd, "scp %s user@%d ", src,actualIP);
-        //printf("%s\n", cmd);
+        sprintf(cmd,SCP);
+        sprintf(tmp, " %s dstevens@%s:", src,actualIP);
+        strcat(cmd,tmp);
+        strcat(cmd,DEST_FILE);
+        printf("%s\n", cmd);
         //system(cmd);
-        printf("FINAL IP: <%s>",actualIP);
     }
     
 }
